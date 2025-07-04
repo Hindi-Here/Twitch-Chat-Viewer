@@ -1,0 +1,25 @@
+﻿<Window x:Class="TwitchChatView.Chat"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TwitchChatView"
+        mc:Ignorable="d"
+        Loaded="ChatLoaded"
+        Title="Chat" Height="450" Width="500">
+    <Grid>
+
+        <Grid x:Name="background_container" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+
+        <Canvas>
+            <ScrollViewer x:Name="chatScroll" 
+              VerticalScrollBarVisibility="Hidden"
+              HorizontalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="chat"
+                Orientation="Vertical"
+                CanVerticallyScroll="True"/>
+            </ScrollViewer>
+        </Canvas>
+
+    </Grid>
+</Window>

@@ -1,0 +1,163 @@
+﻿<Window x:Class="TwitchChatView.Setting"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:local="clr-namespace:TwitchChatView"
+        mc:Ignorable="d"
+        Title="Twitch Chat Viewer"
+        Background="#252525"
+        Height="600"
+        Width="350"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        MouseLeftButtonDown="DragForm">
+
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="400"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Height="70" VerticalAlignment="Top" Background="#202020">
+            <Image Width="25" Height="25" Source="Resources/twitch.png" VerticalAlignment="Center" Margin="15,0,10,-3"></Image>
+            <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"> Twitch Chat Viewer</TextBlock>
+            <Image Width="15" Height="15" Source="Resources/hide_panel.png" VerticalAlignment="Center" Margin="105,0,0,0" MouseLeftButtonDown="MinimizeForm" Style="{StaticResource ImageHover}"></Image>
+            <Image Width="15" Height="16" Source="Resources/close_panel.png" VerticalAlignment="Center" Margin="10,0,10,0" MouseLeftButtonDown="CloseForm" Style="{StaticResource ImageHover}"></Image>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" Grid.Row="1">
+            <StackPanel Grid.Row="1" Orientation="Vertical" VerticalAlignment="Top">
+
+                <TextBlock Style="{StaticResource SectionTextStyle}"> Window Location</TextBlock>
+                <StackPanel x:Name="w_pos_radio_group" Orientation="Horizontal" Margin="15,0,0,15">
+                    <RadioButton x:Name="w_pos_left" GroupName="w_pos_group" IsChecked="True" Content="Left" Style="{StaticResource RadioButtonStyle}" Checked="UpdateWindowState"/>
+                    <RadioButton x:Name="w_pos_right" GroupName="w_pos_group" Content="Right" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateWindowState"/>
+                    <RadioButton x:Name="w_pos_center" GroupName="w_pos_group" Content="Center" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateWindowState"/>
+                    <RadioButton x:Name="w_pos_manual" GroupName="w_pos_group" Content="Manual" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateWindowState"/>
+                </StackPanel>
+                <StackPanel x:Name="w_pos_manual_group" Orientation="Horizontal" Margin="15,0,0,0">
+                    <TextBlock Text="Position" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBlock Margin="15,1,0,0" Text="X" Foreground="White"/>
+                    <TextBox x:Name="w_pos_x" Margin="5,0,0,0" Text="0" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                    <TextBlock Margin="15,1,0,0" Text="Y" Foreground="White"/>
+                    <TextBox x:Name="w_pos_y" Margin="5,0,0,0" Text="0" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="15,7,0,15">
+                    <TextBlock Text="Size" Style="{StaticResource PropetryTextStyle}" />
+                    <TextBlock Margin="36,1,0,0" Text="X" Foreground="White"/>
+                    <TextBox x:Name="w_size_x" Margin="5,0,0,0"  Text="400" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                    <TextBlock Margin="15,1,0,0" Text="Y" Foreground="White"/>
+                    <TextBox x:Name="w_size_y" Margin="5,0,0,0" Text="auto" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                </StackPanel>
+
+                <TextBlock Style="{StaticResource SectionTextStyle}"> Chat Location</TextBlock>
+                <CheckBox x:Name="c_chat_on_window" Content="Chat on Window" Margin="15,0,0,15" IsChecked="True" Style="{StaticResource CheckBoxStyle}" Checked="UpdateChatState" Unchecked="UpdateChatState"/>
+                <StackPanel  x:Name="c_pos_radio_group" Orientation="Horizontal" Margin="15,0,0,15">
+                    <RadioButton x:Name="c_pos_left" GroupName="c_pos_group" IsChecked="True" Content="Left" Style="{StaticResource RadioButtonStyle}" Checked="UpdateChatState"/>
+                    <RadioButton x:Name="c_pos_right" GroupName="c_pos_group" Content="Right" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateChatState"/>
+                    <RadioButton x:Name="c_pos_center" GroupName="c_pos_group" Content="Center" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateChatState"/>
+                    <RadioButton x:Name="c_pos_manual" GroupName="c_pos_group" Content="Manual" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateChatState"/>
+                </StackPanel>
+                <StackPanel x:Name="c_pos_manual_group" Orientation="Horizontal" Margin="15,0,0,0">
+                    <TextBlock Text="Position" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBlock Margin="15,1,0,0" Text="X" Foreground="White"/>
+                    <TextBox x:Name="c_pos_x" Margin="5,0,0,0" Text="0" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                    <TextBlock Margin="15,1,0,0" Text="Y" Foreground="White"/>
+                    <TextBox x:Name="c_pos_y" Margin="5,0,0,0" Text="0" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                </StackPanel>
+                <StackPanel x:Name="c_size_group" Orientation="Horizontal" Margin="15,7,0,15">
+                    <TextBlock Text="Size" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBlock Margin="36,1,0,0" Text="X" Foreground="White"/>
+                    <TextBox x:Name="c_size_x" Margin="5,0,0,0" Text="400" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                    <TextBlock Margin="15,1,0,0" Text="Y" Foreground="White"/>
+                    <TextBox x:Name="c_size_y" Margin="5,0,0,0" Text="auto" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                </StackPanel>
+
+                <TextBlock Style="{StaticResource SectionTextStyle}"> Message</TextBlock>
+                <StackPanel Orientation="Horizontal" Margin="15,0,0,0">
+                    <TextBlock Style="{StaticResource PropetryTextStyle}" Text="Font Size"/>
+                    <TextBox  x:Name="m_size" Margin="33,0,0,0" Text="12" Width="25" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                    <TextBlock Margin="5,1,0,0" Text="px" Foreground="White"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="15,7,0,0">
+                    <TextBlock Text="Font Family" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBox x:Name="m_font" Margin="20,0,0,0" Text="Segoe UI" Width="113" Padding="3,0" Style="{StaticResource TextBoxStyle}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="15,7,0,15">
+                    <TextBlock Text="Color" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBox x:Name="m_color" Margin="20,0,0,0" Text="#FFFFFF" Width="70" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator" Tag="{Binding ElementName=m_color_preview}"/>
+                    <Label x:Name="m_color_preview" Margin="5,0,0,0" Width="10" Height="10" Background="White" MouseLeftButtonUp="ChooseBackgroundColor" Tag="{Binding ElementName=m_color}"/>
+                </StackPanel>
+
+                <TextBlock Style="{StaticResource SectionTextStyle}"> Background</TextBlock>
+                <CheckBox x:Name="b_transparent" Content="Tranparent" Margin="15,0,0,15" IsChecked="True" Style="{StaticResource CheckBoxStyle}" Checked="UpdateBackgroundState" Unchecked="UpdateBackgroundState"/>
+                <StackPanel x:Name="b_radio_group" Orientation="Horizontal" Margin="15,0,0,15">
+                    <RadioButton x:Name="b_palette" GroupName="b_group" IsChecked="True" Content="Palette" Style="{StaticResource RadioButtonStyle}" Checked="UpdateBackgroundState"/>
+                    <RadioButton x:Name="b_image" GroupName="b_group" Content="Image" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateBackgroundState"/>
+                </StackPanel>
+                <StackPanel x:Name="b_color_group" Orientation="Horizontal" Margin="15,0,0,0">
+                    <TextBlock Text="Color" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBox x:Name="b_color" Margin="20,0,0,0" Text="#FFFFFF" Width="70" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator" Tag="{Binding ElementName=b_color_preview}"/>
+                    <Label x:Name="b_color_preview" Margin="5,0,0,0" Width="10" Height="10" Background="White" MouseLeftButtonUp="ChooseBackgroundColor" Tag="{Binding ElementName=b_color}"/>
+                </StackPanel>
+                <StackPanel x:Name="b_image_group" Orientation="Horizontal" Margin="15,7,0,0">
+                    <TextBlock Text="Image" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBox x:Name="b_image_path" Margin="49,0,0,0" Width="141" Padding="3,0" Style="{StaticResource TextBoxStyle}" TextChanged="UpdateBackgroundState"/>
+                    <Image x:Name="b_image_choose_ico" Margin="5,0,0,0" Width="10" Height="10" Source="Resources/folder.png" MouseLeftButtonDown="ChooseBackgroundImage"/>
+
+                </StackPanel>
+                <StackPanel x:Name="b_fill_radio_group" Orientation="Horizontal" Margin="15,15,0,8">
+                    <RadioButton x:Name="b_fill_uniform_to" GroupName="b_fill_group" IsChecked="True" Content="UniformTo" Style="{StaticResource RadioButtonStyle}" Checked="UpdateBackgroundState"/>
+                    <RadioButton x:Name="b_fill_uniform" GroupName="b_fill_group" Content="Uniform" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateBackgroundState"/>
+                    <RadioButton x:Name="b_fill" GroupName="b_fill_group" Content="Fill" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateBackgroundState"/>
+                    <RadioButton x:Name="b_fill_manual" GroupName="b_fill_group" Content="Manual" Margin="25,0,0,0" Style="{StaticResource RadioButtonStyle}" Checked="UpdateBackgroundState"/>
+                </StackPanel>
+                <StackPanel x:Name="b_pos_image_group" Orientation="Horizontal" Margin="15,7,0,0">
+                    <TextBlock Text="Position" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBlock Margin="42,1,0,0" Text="X" Foreground="White"/>
+                    <TextBox x:Name="b_pos_image_x" Margin="5,0,0,0" Text="0" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                    <TextBlock Margin="15,1,0,0" Text="Y" Foreground="White"/>
+                    <TextBox x:Name="b_pos_image_y" Margin="5,0,0,0" Text="0" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                </StackPanel>
+                <StackPanel x:Name="b_size_image_group" Orientation="Horizontal" Margin="15,7,0,0">
+                    <TextBlock Text="Size" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBlock Margin="64,1,0,0" Text="X" Foreground="White"/>
+                    <TextBox x:Name="b_size_image_x" Margin="5,0,0,0" Text="0" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                    <TextBlock Margin="15,1,0,0" Text="Y" Foreground="White"/>
+                    <TextBox x:Name="b_size_image_y" Margin="5,0,0,0" Text="0" Width="50" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                </StackPanel>
+                <StackPanel x:Name="b_opacity_group" Orientation="Horizontal" Margin="15,7,0,15">
+                    <TextBlock Text="Opacity" Style="{StaticResource PropetryTextStyle}"/>
+                    <TextBox x:Name="b_opacity" Margin="41,0,0,0" Text="100" Width="40" TextAlignment="Center" Style="{StaticResource TextBoxStyle}" LostFocus="TextBoxValueValidator"/>
+                    <TextBlock Margin="5,1,0,0" Text="%" Foreground="White"/>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Vertical" VerticalAlignment="Top">
+            <TextBlock Style="{StaticResource SectionTextStyle}"> Stream Link </TextBlock>
+            <TextBox x:Name="link"  Width="320" Margin="0,0,0,15" Padding="3,0" Style="{StaticResource TextBoxStyle}" TextChanged="UpdateLaunchState"/>
+            <Button x:Name="launch" Width="320" Margin="0,0,0,15" IsEnabled="False" Click="LaunchChatForm" Style="{StaticResource ButtonStyle}">Start Chat</Button>
+        </StackPanel>
+
+        <Popup x:Name="color_picker_popup" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+            <Border Width="250" Height="250" Background="#252525" BorderBrush="#303030" BorderThickness="1" Padding="10" CornerRadius="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <materialDesign:ColorPicker x:Name="color_picker" Grid.Row="0" Margin="0,0,0,10" MouseMove="UpdateColorValue"/>
+                    <Slider x:Name="alpha_slider" Grid.Row="1" Minimum="0" Maximum="100" Value="100" Style="{StaticResource AlphaSliderStyle}" ValueChanged="UpdateColorValue"/>
+                </Grid>
+            </Border>
+        </Popup>
+
+    </Grid>
+
+</Window>
