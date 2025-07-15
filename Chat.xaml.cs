@@ -1,216 +1,44 @@
 ﻿using Microsoft.Playwright;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Hardcodet.Wpf.TaskbarNotification;
-using System.IO;
-using System.Text.Json;
-using System.Windows.Shapes;
 using System.Windows.Media.Effects;
-using System.ComponentModel;
-using System.Threading;
 using System.Xml.Linq;
 
 namespace TwitchChatView
 {
     public partial class Chat : Window
     {
-        readonly string config_path = System.IO.Path.Combine(@"..\..\..\config.json");
         private readonly string _link;
 
         private TaskbarIcon? _notifyIcon;
-        private Config? config;
+        private readonly ManagerConfig _managerConfig = new();
+
+        private IBrowser? _browser;
+        private IPlaywright? _playwright;
+        private IPage? _page;
+        private CancellationTokenSource? _cts;
 
         public Chat(string link)
         {
             InitializeComponent();
+
+            SetupConfig();
             SetupTrayIcon();
-            ChatConfig();
 
             _link = link;
         }
 
+        private void SetupConfig()
+        {
+            _managerConfig.ApplyConfigToChat(this);
+        }
+
         private async void ChatLoaded(object sender, RoutedEventArgs e)
             => await ChatHandler();
-
-        private void ChatConfig()
-        {
-            string json = File.ReadAllText(config_path);
-            config = JsonSerializer.Deserialize<Config>(json)!;
-
-            DefaultWindowSetting();
-
-            SetWindowSize(config);
-            SetWindowLocation(config);
-            SetBackground(config);
-
-            SetChatSize(config);
-            SetChatLocation(config);
-        }
-
-        private void DefaultWindowSetting()
-        {
-            AllowsTransparency = true;
-            WindowStyle = WindowStyle.None;
-            ShowInTaskbar = false;
-            Topmost = true;
-            Background = Brushes.Transparent;
-        }
-
-        private void SetWindowSize(Config config)
-        {
-            Width = config.w_size_x.Equals("auto", StringComparison.OrdinalIgnoreCase)
-                  ? SystemParameters.WorkArea.Width
-                  : int.Parse(config.w_size_x);
-
-            Height = config.w_size_y.Equals("auto", StringComparison.OrdinalIgnoreCase)
-                   ? SystemParameters.WorkArea.Height
-                   : int.Parse(config.w_size_y);
-        }
-
-        private void SetChatSize(Config config)
-        {
-            if (config.chat_on_window)
-            {
-                chatScroll.Width = Width;
-                chatScroll.Height = Height;
-                return;
-            }
-
-            chatScroll.Width = config.c_size_x.Equals("auto", StringComparison.OrdinalIgnoreCase)
-                  ? Width
-                  : int.Parse(config.c_size_x);
-
-            chatScroll.Height = config.c_size_y.Equals("auto", StringComparison.OrdinalIgnoreCase)
-                  ? Height
-                  : int.Parse(config.c_size_y);
-
-            chat.VerticalAlignment = VerticalAlignment.Stretch;
-            chat.HorizontalAlignment = HorizontalAlignment.Stretch;
-        }
-
-        private void SetWindowLocation(Config config)
-        {
-            double screenTop = SystemParameters.WorkArea.Top;
-            Top = screenTop;
-
-            switch (config.w_pos_locate)
-            {
-                case "Left":
-                    Left = SystemParameters.WorkArea.Left;
-                    break;
-
-                case "Right":
-                    Left = SystemParameters.WorkArea.Right - Width;
-                    break;
-
-                case "Center":
-                    Left = (SystemParameters.WorkArea.Width - Width) / 2;
-                    break;
-
-                case "Manual":
-                    Left = int.Parse(config.w_pos_x);
-                    Top = screenTop + int.Parse(config.w_pos_y);
-                    break;
-            }
-        }
-
-        private void SetChatLocation(Config config)
-        {
-            double left = 0;
-            double top = 0;
-
-            if (config.chat_on_window)
-            {
-                Canvas.SetLeft(chatScroll, left);
-                Canvas.SetTop(chatScroll, top);
-                return;
-            }
-
-            switch (config.c_pos_locate)
-            {
-                case "Left":
-                    left = 0;
-                    break;
-
-                case "Right":
-                    left = Width - chatScroll.Width;
-                    break;
-
-                case "Center":
-                    left = (Width - chatScroll.Width) / 2;
-                    break;
-
-                case "Manual":
-                    left = int.Parse(config.c_pos_x);
-                    top = int.Parse(config.c_pos_y);
-                    break;
-            }
-
-            Canvas.SetLeft(chatScroll, left);
-            Canvas.SetTop(chatScroll, top);
-        }
-
-        private void SetBackground(Config config)
-        {
-            background_container.Background = Brushes.Transparent;
-            background_container.Children.Clear();
-
-            Opacity = int.Parse(config.b_opacity) / 100.0;
-
-            if (config.transparent)
-                return;
-
-            switch (config.mode)
-            {
-                case "Palette":
-                    background_container.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(config.b_color));
-                    break;
-                case "Image":
-                    var image = new Image
-                    {
-                        Source = new BitmapImage(new Uri(config.b_image_path)),
-                    };
-
-                    switch (config.b_image_fill_mode)
-                    {
-                        case "Uniform":
-                            image.Stretch = Stretch.Uniform;
-                            break;
-
-                        case "Fill":
-                            image.Stretch = Stretch.Fill;
-                            break;
-
-                        case "UniformTo":
-                            image.Stretch = Stretch.UniformToFill;
-                            break;
-
-                        case "Manual":
-                            var container = new Grid
-                            {
-                                Width = double.Parse(config.b_size_x),
-                                Height = double.Parse(config.b_size_y),
-                                HorizontalAlignment = HorizontalAlignment.Left,
-                                VerticalAlignment = VerticalAlignment.Top,
-                                Margin = new Thickness(double.Parse(config.b_pos_x),
-                                                       double.Parse(config.b_pos_y), 0, 0),
-                                ClipToBounds = true
-                            };
-
-                            container.Children.Add(image);
-                            background_container.Children.Add(container);
-                            return;
-                    }
-
-                    background_container.Children.Add(image);
-                    break;
-            }
-        }
 
         private void SetupTrayIcon()
         {
@@ -226,18 +54,16 @@ namespace TwitchChatView
         {
             var menu = new ContextMenu();
 
-            var setting = new MenuItem { Header = "Открыть настройки" };
-            setting.Click += (s, e) =>
+            var setting = new MenuItem { Header = "Open Setting" };
+            setting.Click += async (s, e) =>
             {
-                new Setting().Show();
-                _notifyIcon!.Dispose();
-                this.Close();
+                await BackToSetting();
             };
 
-            var exit = new MenuItem { Header = "Выйти" };
-            exit.Click += (s, e) =>
+            var exit = new MenuItem { Header = "Exit" };
+            exit.Click += async (s, e) =>
             {
-                _notifyIcon!.Dispose();
+                await ResourceDispose();
                 Application.Current.Shutdown();
             };
 
@@ -248,18 +74,51 @@ namespace TwitchChatView
             return menu;
         }
 
+        private async Task ResourceDispose()
+        {
+            await Task.Run(() => _cts?.Cancel());
+
+            _notifyIcon?.Dispose();
+
+            if (_page != null)
+            {
+                await _page.CloseAsync();
+                _page = null;
+            }
+
+            if (_browser != null)
+            {
+                await _browser.CloseAsync();
+                _browser = null;
+            }
+
+            _playwright?.Dispose();
+            _playwright = null;
+        }
+
+        private async Task BackToSetting()
+        {
+            await ResourceDispose();
+
+            if (Application.Current.Windows.OfType<Setting>().FirstOrDefault() == null)
+                new Setting().Show();
+
+            this.Close();
+        }
+
         private void ChatBuilder(MessageParser.Message msg)
         {
-            int size = int.Parse(config!.m_size);
+            int size = int.Parse(_managerConfig.GetConfigValue("m_size"));
 
             var message = new TextBlock
             {
                 TextWrapping = TextWrapping.Wrap,
-                Width = chatScroll.ActualWidth,
+                Width = chat_scroll.ActualWidth,
                 Margin = new Thickness(3),
                 FontSize = size,
-                FontFamily = new FontFamily(config.m_font),
-                Foreground = (SolidColorBrush)new BrushConverter().ConvertFromString(config.m_color)!,
+                FontFamily = new FontFamily(_managerConfig.GetConfigValue("m_font")),
+                Foreground = (SolidColorBrush)new BrushConverter().ConvertFromString(_managerConfig.GetConfigValue("m_color"))!,
+                Padding = new Thickness(0,0,5,0),
 
                 Effect = new DropShadowEffect
                 {
@@ -317,62 +176,95 @@ namespace TwitchChatView
                 message.Inlines.Add(new Run(" "));
             }
 
-            chat.Children.Add(message);
-            chatScroll.ScrollToBottom();
+            chat_zone.Children.Add(message);
+            chat_scroll.ScrollToBottom();
 
-            if (chat.Children.Count > 50)
-                chat.Children.RemoveAt(0);
+            if (chat_zone.Children.Count > 50)
+                chat_zone.Children.RemoveAt(0);
         }
 
-        private async Task ChatHandler(CancellationToken cancellationToken = default)
+        private async Task ChatHandler()
         {
-            using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-            {
-                Args = [
-                    "--renderer-process-limit=2",
-                    "--disable-gpu",
-                    "--disable-extensions",
-                    "--disable-background-networking",
-                    "--disable-default-apps",
-                    "--disable-sync",
-                    "--disable-translate",
-                    "--disable-logging"]
+            _cts = new CancellationTokenSource()!;
 
+            _playwright = await Playwright.CreateAsync();
+            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                Args =
+                [
+                "--renderer-process-limit=2",
+                "--disable-gpu",
+                "--disable-extensions",
+                "--disable-background-networking",
+                "--disable-default-apps",
+                "--disable-sync",
+                "--disable-translate",
+                "--disable-logging"
+                ]
             });
-            var page = await browser.NewPageAsync();
-            await page.GotoAsync(_link);
 
-            int message_count = 0;
-            int message_limit = 100;
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                var messages = page.Locator("div.chat-line__message-container");
+                _page = await _browser.NewPageAsync();
+                await _page.GotoAsync(_link);
+
+                await Task.Delay(1000);
+                var chatElement = await _page.Locator("div.Layout-sc-1xcs6mc-0.gyMdFQ.stream-chat").CountAsync();
+                var offline = await _page.Locator("text=Не в сети").CountAsync();
+                if (chatElement == 0 || offline > 0)
+                {
+                    await BackToSetting();
+                    return;
+                }
+            }
+            catch (Exception) {
+                await BackToSetting();
+                return;
+            }
+
+            int messageCount = 0;
+            int messageLimit = 100;
+            while (!_cts.IsCancellationRequested)
+            {
+                var messages = _page.Locator("div.chat-line__message-container");
                 int count = await messages.CountAsync();
 
-                if (count > message_limit)
+                if (count > messageLimit)
                 {
-                    int remove_count = message_count;
-                    await page.EvaluateAsync($@"
+                    int removeCount = messageCount;
+                    await _page.EvaluateAsync($@"
                             const elements = document.querySelectorAll('div.chat-line__message-container');
-                            for (let i = 0; i < {remove_count}; i++) {{
+                            for (let i = 0; i < {removeCount}; i++) {{
                                 if (elements[i]) elements[i].remove();
                                 }}
                             ");
 
-                    count -= remove_count;
-                    message_count = 0;
+                    count -= removeCount;
+                    messageCount = 0;
                 }
 
-                for (int i = message_count; i < count; i++)
+                for (int i = messageCount; i < count; i++)
                 {
-                    MessageParser.Message msg = await MessageParser.GetChatAttributes(messages.Nth(i));
-                    ChatBuilder(msg);
+                    if (_cts.IsCancellationRequested)
+                        break;
+
+                    try
+                    {
+                        MessageParser.Message msg = await MessageParser.GetChatAttributes(messages.Nth(i));
+                        ChatBuilder(msg);
+                    }
+                    catch(Exception)
+                    {
+                        await BackToSetting();
+                        return;
+                    }
                 }
 
-                message_count = count;
-                await Task.Delay(500, cancellationToken);
+                messageCount = count;
+                await Task.Delay(50);
+                
             }
+            await ResourceDispose();
         }
 
     }

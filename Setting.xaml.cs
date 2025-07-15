@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System.Text.Json;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,7 +11,8 @@ namespace TwitchChatView
 {
     public partial class Setting : Window
     {
-        readonly string config_path = Path.Combine(@"..\..\..\config.json");
+        private readonly ManagerConfig _managerConfig;
+
         public Setting()
         {
             InitializeComponent();
@@ -22,115 +21,52 @@ namespace TwitchChatView
                    Int32Rect.Empty,
                    BitmapSizeOptions.FromEmptyOptions());
 
-            ConfigLoader();
+            _managerConfig = new ManagerConfig(GetElementAndPropertyMap());
+            _managerConfig.LoadConfig();
+
             StartSettingState();
         }
         private void LaunchChatForm(object sender, RoutedEventArgs e)
         {
-            ConfigBuilder();
+            _managerConfig.BuildConfig();
             new Chat(link.Text).Show();
             this.Close();
         }
 
-        private void ConfigLoader()
+        private Dictionary<UIElement, string> GetElementAndPropertyMap()
         {
-            string path = config_path;
-            if (!File.Exists(path))
-                ConfigBuilder();
-
-            string json = File.ReadAllText(path);
-            var config = JsonSerializer.Deserialize<Config>(json);
-
-            SetRadioButton(w_pos_radio_group, config!.w_pos_locate);
-            w_pos_x.Text = config.w_pos_x;
-            w_pos_y.Text = config.w_pos_y;
-            w_size_x.Text = config.w_size_x;
-            w_size_y.Text = config.w_size_y;
-
-            c_chat_on_window.IsChecked = config.chat_on_window;
-            SetRadioButton(c_pos_radio_group, config.c_pos_locate);
-            c_pos_x.Text = config.c_pos_x;
-            c_pos_y.Text = config.c_pos_y;
-            c_size_x.Text = config.c_size_x;
-            c_size_y.Text = config.c_size_y;
-
-            m_size.Text = config.m_size;
-            m_font.Text = config.m_font;
-            ColorShow(m_color_preview, config.m_color);
-            m_color.Text = config.m_color;
-
-            b_transparent.IsChecked = config.transparent;
-            SetRadioButton(b_radio_group, config.mode);
-            ColorShow(b_color_preview, config.b_color);
-            b_color.Text = config.b_color;
-            b_image_path.Text = config.b_image_path;
-            SetRadioButton(b_fill_radio_group, config.b_image_fill_mode);
-            b_pos_image_x.Text = config.b_pos_x;
-            b_pos_image_y.Text = config.b_pos_y;
-            b_size_image_x.Text = config.b_size_x;
-            b_size_image_y.Text = config.b_size_y;
-            b_opacity.Text = config.b_opacity;
-        }
-
-        private void ConfigBuilder()
-        {
-            var config = new Config
+            return new Dictionary<UIElement, string>
             {
-                w_pos_locate = GetRadioButtonContent(w_pos_radio_group),
-                w_pos_x = w_pos_x.Text,
-                w_pos_y = w_pos_y.Text,
-                w_size_x = w_size_x.Text,
-                w_size_y = w_size_y.Text,
+                { w_pos_radio_group, "w_pos_locate" },
+                { w_pos_x, "w_pos_x" },
+                { w_pos_y, "w_pos_y" },
+                { w_size_x, "w_size_x" },
+                { w_size_y, "w_size_y" },
 
-                chat_on_window = c_chat_on_window.IsChecked == true,
-                c_pos_locate = GetRadioButtonContent(c_pos_radio_group),
-                c_pos_x = c_pos_x.Text,
-                c_pos_y = c_pos_y.Text,
-                c_size_x = c_size_x.Text,
-                c_size_y = c_size_y.Text,
+                { c_chat_on_window, "chat_on_window" },
+                { c_pos_radio_group, "c_pos_locate" },
+                { c_pos_x, "c_pos_x" },
+                { c_pos_y, "c_pos_y" },
+                { c_size_x, "c_size_x" },
+                { c_size_y, "c_size_y" },
 
-                m_size = m_size.Text,
-                m_font = m_font.Text,
-                m_color = m_color.Text,
+                { m_size, "m_size" },
+                { m_font, "m_font" },
+                { m_color, "m_color" },
+                { m_color_preview, "m_color" },
 
-                transparent = b_transparent.IsChecked == true,
-                mode = GetRadioButtonContent(b_radio_group),
-                b_color = b_color.Text,
-                b_image_path = b_image_path.Text,
-                b_image_fill_mode = GetRadioButtonContent(b_fill_radio_group),
-                b_pos_x = b_pos_image_x.Text,
-                b_pos_y = b_pos_image_y.Text,
-                b_size_x = b_size_image_x.Text,
-                b_size_y = b_size_image_y.Text,
-                b_opacity = b_opacity.Text
+                { b_transparent, "transparent" },
+                { b_radio_group, "mode" },
+                { b_color, "b_color" },
+                { b_color_preview, "b_color" },
+                { b_image_path, "b_image_path" },
+                { b_fill_radio_group, "b_image_fill_mode" },
+                { b_pos_image_x, "b_pos_x" },
+                { b_pos_image_y, "b_pos_y" },
+                { b_size_image_x, "b_size_x" },
+                { b_size_image_y, "b_size_y" },
+                { b_opacity, "b_opacity" }
             };
-
-            string json = JsonSerializer.Serialize(config, new JsonSerializerOptions
-            {
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                WriteIndented = true
-            });
-
-            File.WriteAllText(config_path, json);
-        }
-
-        private static string GetRadioButtonContent(StackPanel radioGroup)
-        {
-            foreach (var radio in radioGroup.Children.OfType<RadioButton>())
-                if (radio.IsChecked == true)
-                    return radio.Content.ToString()!;
-
-            return string.Empty;
-        }
-
-        private static void SetRadioButton(StackPanel radioGroup, string value)
-        {
-            foreach (var radio in radioGroup.Children.OfType<RadioButton>())
-                if (radio.Content.ToString() == value)
-                {
-                    radio.IsChecked = true;
-                    break;
-                }
         }
 
         private void StartSettingState()
@@ -140,14 +76,19 @@ namespace TwitchChatView
             UpdateBackgroundState();
         }
 
+        private static void SetGroupState(UIElement group, bool isEnabled)
+        {
+            group.IsEnabled = isEnabled;
+            group.Opacity = isEnabled ? 1.0 : 0.5;
+        }
+
         private void UpdateWindowState()
         {
             if (w_pos_manual_group == null)
                 return;
 
             bool isManual = w_pos_manual.IsChecked == true;
-            w_pos_manual_group.IsEnabled = isManual;
-            w_pos_manual_group.Opacity = isManual ? 1.0 : 0.5;
+            SetGroupState(w_pos_manual_group, isManual);
         }
 
         private void UpdateWindowState(object sender, RoutedEventArgs e)
@@ -161,17 +102,9 @@ namespace TwitchChatView
             bool isChatOnWindow = c_chat_on_window.IsChecked == true;
             bool isManual = c_pos_manual.IsChecked == true;
 
-            bool enabled = !isChatOnWindow;
-            double opacity = isChatOnWindow ? 0.5 : 1.0;
-
-            c_pos_radio_group.IsEnabled = enabled;
-            c_pos_radio_group.Opacity = opacity;
-
-            c_size_group.IsEnabled = enabled;
-            c_size_group.Opacity = opacity;
-
-            c_pos_manual_group.IsEnabled = enabled && isManual;
-            c_pos_manual_group.Opacity = isManual ? opacity : 0.5;
+            SetGroupState(c_pos_radio_group, !isChatOnWindow);
+            SetGroupState(c_size_group, !isChatOnWindow);
+            SetGroupState(c_pos_manual_group, !isChatOnWindow && isManual);
         }
 
         private void UpdateChatState(object sender, RoutedEventArgs e)
@@ -188,28 +121,13 @@ namespace TwitchChatView
             bool isNullImagePath = string.IsNullOrEmpty(b_image_path.Text);
             bool isManualFill = b_fill_manual.IsChecked == true;
 
-            double opacity = isTransparent ? 0.5 : 1.0;
-
-            b_radio_group.IsEnabled = !isTransparent;
-            b_radio_group.Opacity = opacity;
-
-            b_color_group.IsEnabled = !isTransparent && isPalette;
-            b_color_group.Opacity = isPalette ? opacity : 0.5;
-
-            b_image_group.IsEnabled = !isTransparent && isImage;
-            b_image_group.Opacity = isImage ? opacity : 0.5;
-
-            b_fill_radio_group.IsEnabled = !isTransparent && isImage && !isNullImagePath;
-            b_fill_radio_group.Opacity = (isImage && !isNullImagePath) ? opacity : 0.5;
-
-            b_pos_image_group.IsEnabled = !isTransparent && isImage && !isNullImagePath && isManualFill;
-            b_pos_image_group.Opacity = (isImage && !isNullImagePath && isManualFill) ? opacity : 0.5;
-
-            b_size_image_group.IsEnabled = !isTransparent && isImage && !isNullImagePath && isManualFill;
-            b_size_image_group.Opacity = (isImage && !isNullImagePath && isManualFill) ? opacity : 0.5;
-
-            b_opacity_group.IsEnabled = !isTransparent;
-            b_opacity_group.Opacity = opacity;
+            SetGroupState(b_radio_group, !isTransparent);
+            SetGroupState(b_color_group, !isTransparent && isPalette);
+            SetGroupState(b_image_group, !isTransparent && isImage);
+            SetGroupState(b_fill_radio_group,!isTransparent && isImage && !isNullImagePath);
+            SetGroupState(b_pos_image_group, !isTransparent && isImage && !isNullImagePath && isManualFill);
+            SetGroupState(b_size_image_group, !isTransparent && isImage && !isNullImagePath && isManualFill);
+            SetGroupState(b_opacity_group, !isTransparent);
         }
 
         private void UpdateBackgroundState(object sender, RoutedEventArgs? e)
@@ -221,17 +139,19 @@ namespace TwitchChatView
         private void UpdateLaunchState(object sender, TextChangedEventArgs e)
            => launch.IsEnabled = !string.IsNullOrEmpty(link.Text);
 
-        private static void TextBoxValueValidator(TextBox textBox)
+        private void TextBoxValueValidator(TextBox textBox)
         {
             string name = textBox.Name;
+            bool isInt = int.TryParse(textBox.Text, out int value);
+
             switch (name)
             {
                 case string when name is "w_pos_x" or "w_pos_y" or
                                          "c_pos_x" or "c_pos_y" or
                                          "b_pos_image_x" or "b_pos_image_y":
 
-                    if (!int.TryParse(textBox.Text, out _))
-                        textBox.Text = "0";
+                    if (!isInt)
+                        textBox.Text = _managerConfig.GetConfigValue(name);
 
                     break;
 
@@ -239,38 +159,27 @@ namespace TwitchChatView
                                          "c_size_x" or "c_size_y" or
                                          "b_size_image_x" or "b_size_image_y":
 
-                    if (!int.TryParse(textBox.Text, out _) && !textBox.Text.Equals("auto", StringComparison.OrdinalIgnoreCase))
-                        textBox.Text = "400";
+                    if ((!isInt || value < 0) && !textBox.Text.Equals("auto", StringComparison.OrdinalIgnoreCase))
+                        textBox.Text = _managerConfig.GetConfigValue(name);
 
                     break;
 
-                case "m_size":
-                    if (!int.TryParse(textBox.Text, out int num) || num > 100 || num < 0)
-                        textBox.Text = "12";
+                case string when name is "m_size" or "b_opacity":
+                    if (!isInt || value > 100 || value < 0)
+                        textBox.Text = _managerConfig.GetConfigValue(name);
 
                     break;
 
                 case string when name is "m_color" or "b_color":
                     string color = Regex.IsMatch(textBox.Text, @"^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$", RegexOptions.IgnoreCase)
                                  ? textBox.Text
-                                 : "#FFFFFF";
+                                 : _managerConfig.GetConfigValue(name);
 
                     textBox.Text = color;
-                    ColorShow((Label)textBox.Tag, color);
-
-                    break;
-
-                case "b_opacity":
-                    if (!int.TryParse(textBox.Text, out int opacity) || opacity > 100 || opacity < 0)
-                        textBox.Text = "0";
+                    ManagerConfig.SelectedColorShow((Label)textBox.Tag, color);
 
                     break;
             }
-        }
-
-        private static void ColorShow(Label label, string color)
-        {
-            label.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
         }
 
         private void TextBoxValueValidator(object sender, RoutedEventArgs e)
@@ -294,10 +203,10 @@ namespace TwitchChatView
             {
                 byte alpha = (byte)(alpha_slider.Value / 100 * 255);
                 Color color = color_picker.Color;
-                Color color_alpha = Color.FromArgb(alpha, color.R, color.G, color.B);
+                Color colorA = Color.FromArgb(alpha, color.R, color.G, color.B);
 
-                label.Background = new SolidColorBrush(color_alpha);
-                textBox.Text = $"#{color_alpha.A:X2}{color_alpha.R:X2}{color_alpha.G:X2}{color_alpha.B:X2}";
+                label.Background = new SolidColorBrush(colorA);
+                textBox.Text = $"#{colorA.A:X2}{colorA.R:X2}{colorA.G:X2}{colorA.B:X2}";
             }
         }
 
@@ -317,13 +226,18 @@ namespace TwitchChatView
 
             if (dialog.ShowDialog() == true)
             {
-                string selected_path = dialog.FileName;
+                string selected = dialog.FileName;
+                b_image_path.Text = selected;
 
-                b_image_path.Text = selected_path;
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(selected);
+                bitmap.EndInit();
 
-                using var img = System.Drawing.Image.FromFile(selected_path);
-                b_size_image_x.Text = img.Width.ToString();
-                b_size_image_y.Text = img.Height.ToString();
+                b_size_image_x.Text = bitmap.PixelWidth.ToString();
+                b_size_image_y.Text = bitmap.PixelHeight.ToString();
+
+                bitmap.Freeze();
             }
         }
 

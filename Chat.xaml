@@ -12,12 +12,8 @@
         <Grid x:Name="background_container" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
 
         <Canvas>
-            <ScrollViewer x:Name="chatScroll" 
-              VerticalScrollBarVisibility="Hidden"
-              HorizontalScrollBarVisibility="Disabled">
-                <StackPanel x:Name="chat"
-                Orientation="Vertical"
-                CanVerticallyScroll="True"/>
+            <ScrollViewer x:Name="chat_scroll" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="chat_zone" Orientation="Vertical" CanVerticallyScroll="True"/>
             </ScrollViewer>
         </Canvas>
 
